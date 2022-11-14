@@ -8,7 +8,6 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.daclink.gymlog_v_sp22.GymLog;
-@Database(entities = {GymLog.class, User.class}, version = 2)
 @TypeConverters({DateTypeConverter.class})
 public abstract class AppDataBase extends RoomDatabase {
     public static final String DATABASE_NAME = "GymLog.DB";
