@@ -2,7 +2,7 @@ package com.daclink.gymlog_v_sp22.DB;
 
 import androidx.room.TypeConverter;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class DateTypeConverter {
     @TypeConverter
