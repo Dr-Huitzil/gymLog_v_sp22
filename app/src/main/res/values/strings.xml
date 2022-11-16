@@ -4,4 +4,8 @@
     <string name="mainWeightHint">Enter Weight</string>
     <string name="mainRepsHint">Enter Reps</string>
     <string name="mainSubmitButton">Submit</string>
+    <string name="logout">Logout</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
 </resources>

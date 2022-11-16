@@ -1,14 +1,21 @@
 package com.daclink.gymlog_v_sp22;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.daclink.gymlog_v_sp22.DB.AppDataBase;
 import com.daclink.gymlog_v_sp22.DB.GymLogDAO;
@@ -29,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     GymLogDAO mGymLogDAO;
     List<GymLog> mGymLogList;
     ActivityMainBinding binding;
+
+    private int mUserId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +71,25 @@ public class MainActivity extends AppCompatActivity {
         refreshDisplay();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.example_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.item2:
+                Toast.makeText(this, "Logout selected", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void refreshDisplay(){
         mGymLogList = mGymLogDAO.getGymLogs();
         if(!mGymLogList.isEmpty()){
@@ -80,8 +108,33 @@ public class MainActivity extends AppCompatActivity {
         double weight = Double.parseDouble(mWeight.getText().toString());
         int reps = Integer.parseInt(mReps.getText().toString());
 
-        GymLog log = new GymLog(exercise, weight, reps);
+        GymLog log = new GymLog(exercise, weight, reps, mUserId);
         mGymLogDAO.insert(log);
         refreshDisplay();
+    }
+
+    private void logoutUser(){
+        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+        alertBuilder.setMessage(R.string.logout);
+
+        alertBuilder.setPositiveButton(getString(R.string.yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        clearUserFromPref();
+                    }
+                });
+        alertBuilder.setNegativeButton(getString(R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                    }
+                });
+
+        alertBuilder.create().show();
+    }
+
+    private void clearUserFromPref(){
+        Toast.makeText(this, "clear users not yet implemented", Toast.LENGTH_SHORT).show();
     }
 }

@@ -13,17 +13,23 @@ public class GymLog {
 
     @PrimaryKey(autoGenerate = true)
     private int mLogId;
+
     private String mExercise;
     private double mWeight;
     private int mReps;
 
     private Date mDate;
 
-    public GymLog(String exercise, double weight, int reps) {
+    private int mUserId;
+
+    public GymLog(String exercise, double weight, int reps, int userId) {
         mExercise = exercise;
         mWeight = weight;
         mReps = reps;
+
         mDate = new Date();
+
+        mUserId = userId;
     }
 
     public String getExercise() {
@@ -64,6 +70,14 @@ public class GymLog {
 
     public void setLogId(int logId) {
         mLogId = logId;
+    }
+
+    public int getUserId() {
+        return mUserId;
+    }
+
+    public void setUserId(int userId) {
+        mUserId = userId;
     }
 
     @Override
