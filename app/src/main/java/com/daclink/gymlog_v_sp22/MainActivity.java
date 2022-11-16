@@ -5,7 +5,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
@@ -25,6 +28,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String USER_ID_KEY = "com.daclink.gymlog_v_sp22.user_id_key";
+    private static final String PREFERENCES_KEY = "com.daclink.gymlog_v_sp22.preferences_key";
     TextView mMainDisplay;
 
     EditText mExercise;
@@ -44,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getDatabase();
+
+        checkForUser();
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -56,11 +65,6 @@ public class MainActivity extends AppCompatActivity {
 
         mMainDisplay.setMovementMethod(new ScrollingMovementMethod());
 
-        mGymLogDAO = Room.databaseBuilder(this, AppDataBase.class, AppDataBase.DATABASE_NAME)
-                .allowMainThreadQueries()
-                .build()
-                .gymLogDAO();
-
         mSubmit.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
@@ -69,6 +73,41 @@ public class MainActivity extends AppCompatActivity {
         });
 
         refreshDisplay();
+    }
+
+    private void getDatabase() {
+        mGymLogDAO = Room.databaseBuilder(this, AppDataBase.class, AppDataBase.DATABASE_NAME)
+                .allowMainThreadQueries()
+                .build()
+                .gymLogDAO();
+    }
+
+    private void checkForUser() {
+        //do we have a user in the intent?
+        mUserId = getIntent().getIntExtra(USER_ID_KEY, -1);
+
+        if(mUserId != 1){
+            return;
+        }
+        //do we have a user in the prefrences?
+        SharedPreferences preferences = this.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+
+        mUserId = preferences.getInt(USER_ID_KEY, -1);
+
+        if(mUserId != -1){
+            return;
+        }
+
+        //do we hvae any users at all?
+        List<User> users = mGymLogDAO.getAllUsers();
+        if(users.size() <= 0){
+            User defaultUser = new User(0, "Def", "Def");
+            mGymLogDAO.insert(defaultUser);
+        }
+
+        Intent intent = LoginActivity.intentFactory(this);
+        startActivity(intent);
+
     }
 
     @Override
@@ -80,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()) {
             case R.id.item2:
                 Toast.makeText(this, "Logout selected", Toast.LENGTH_SHORT).show();
@@ -90,20 +129,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void refreshDisplay(){
-        mGymLogList = mGymLogDAO.getGymLogs();
-        if(!mGymLogList.isEmpty()){
-            StringBuilder sb = new StringBuilder();
-            for(GymLog gymLog : mGymLogList){
-                sb.append(gymLog.toString());
-            }
-            mMainDisplay.setText(sb.toString());
-        }else{
-            mMainDisplay.setText("No logs yet, time to hit the Gym!");
-        }
-    }
-
-    private void submitGymLog(){
+    private GymLog submitGymLog(){
         String exercise = mExercise.getText().toString();
         double weight = Double.parseDouble(mWeight.getText().toString());
         int reps = Integer.parseInt(mReps.getText().toString());
@@ -111,6 +137,27 @@ public class MainActivity extends AppCompatActivity {
         GymLog log = new GymLog(exercise, weight, reps, mUserId);
         mGymLogDAO.insert(log);
         refreshDisplay();
+
+        return log;
+    }
+
+    private void refreshDisplay(){
+        mGymLogList = mGymLogDAO.getLogById(mUserId);
+
+        if(mGymLogList.size() == 0){
+            mMainDisplay.setText(R.string.noLogsMssg);
+            return;
+
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for(GymLog log : mGymLogList) {
+            sb.append(log);
+            sb.append("\n");
+            sb.append("=-=-=-=-=-=-=-=-=");
+            sb.append("\n");
+        }
+        mMainDisplay.setText(sb.toString());
     }
 
     private void logoutUser(){
@@ -136,5 +183,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void clearUserFromPref(){
         Toast.makeText(this, "clear users not yet implemented", Toast.LENGTH_SHORT).show();
+    }
+
+    public static Intent intentFactory(Context context, int userId) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra(USER_ID_KEY, userId);
+
+        return intent;
     }
 }
